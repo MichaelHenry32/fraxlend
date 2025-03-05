@@ -182,7 +182,7 @@ contract VariableInterestRate is IRateCalculatorV2 {
     }
   }
 
-/// @notice The ```getNewRate``` function calculates interest rates using two linear functions f(utilization)
+  /// @notice The ```getNewRate``` function calculates interest rates using two linear functions f(utilization)
   /// @param _deltaTime The elapsed time since last update, given in seconds
   /// @param _utilization The utilization %, given with 5 decimals of precision
   /// @param _oldFullUtilizationInterest The interest value when utilization is 100%, given with 18 decimals of precision
@@ -195,13 +195,16 @@ contract VariableInterestRate is IRateCalculatorV2 {
   ) external view returns (uint64 _newRatePerSec, uint64 _newFullUtilizationInterest) {
     uint64 _frxUsdRatePerSec;
     (_frxUsdRatePerSec, _newFullUtilizationInterest) = getNewFrxUsdRate(_deltaTime, _utilization, _oldFullUtilizationInterest);
-    uint256 -frxUsdRatePerSecMinuend = uint256(_frxUsdRatePerSec);
+    uint256 -
+      frxUsdRatePerSecMinuend = uint256(_frxUsdRatePerSec);
     uint256 _sFrxUsdPricePerShare = IFraxtalERC4626MintRedeemer(0xBFc4D34Db83553725eC6c768da71D2D9c1456B55).pricePerShare();
-    uint256 _frxUsdRatePerSecSubtrahend = getSfrxUsdRPS() * RATE_PREC / _sFrxUsdPricePerShare;
-    if(sfrxUsdRatePerSecSubtrahend >= sfrxUsdRatePerSecMinuend) {
-         _newRatePerSec = uint64(RATE_PREC);
-    } else {
-        _newRatePerSec = uint64((_frxUsdRatePerSecMinuend - _frxUsdRatePerSecSubtrahend) * RATE_PREC / _sFrxUsdPricePerShare);
+    uint256 _frxUsdRatePerSecSubtrahend = (getSfrxUsdRPS() * RATE_PREC) / _sFrxUsdPricePerShare;
+    if (sfrxUsdRatePerSecMinuend > _frxUsdRatePerSecSubtrahend) {
+      _newRatePerSec = uint64(((_frxUsdRatePerSecMinuend - _frxUsdRatePerSecSubtrahend) * RATE_PREC) / _sFrxUsdPricePerShare);
     }
-
+    // Set a minimum sfrxUSD interest rate of 0.1%. This should be pulled into a variable.
+    if (_newRatePerSec < uint64(RATE_PREC / 10)) {
+      _newRatePerSec = uint64(RATE_PREC / 10);
+    }
+  }
 }
